@@ -200,6 +200,33 @@ También se ajustó el control de archivos generados para Git:
   - `packages/`
 - no se tocaron archivos fuente, `.vbproj`, `.resx`, `.nfo`, documentación ni recursos del proyecto
 
+También se agregó un nuevo formato `.nfo` para PEIBO:
+- archivo:
+  - `Formatos a Importar/20 - PEIBO.nfo`
+- criterios de identificación:
+  - `Clave de rastreo`
+  - `Peibo Fintech`
+- configuración:
+  - `empleados = 2` para tratarlo como formato de multiples transacciones por pagina
+  - `banco_origen = Peibo`
+  - `banco_destino` se deja vacio porque puede variar y no es extraible de forma confiable solo con delimitadores simples
+- campos extraíbles de forma confiable con este `.nfo`:
+  - clave de rastreo
+  - nombre del ordenante
+  - cuenta del ordenante
+  - beneficiario registrado en Peibo
+  - nombre de la cuenta destino
+  - concepto de pago
+  - referencia
+  - importe
+  - fecha de operación
+- campos omitidos intencionalmente en este formato por limitación del parser actual:
+  - RFC origen
+  - banco destino
+  - RFC destino
+  - número de cuenta destino
+  - folio de internet
+
 ## Próximos Puntos Útiles a Revisar
 
 - endurecer el parser de extracción
