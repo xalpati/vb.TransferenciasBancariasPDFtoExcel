@@ -1,11 +1,12 @@
-﻿Imports iTextSharp.text.pdf
+﻿Imports System.Data.Common
 Imports System.IO
-Imports Capa_Identidad
 Imports Capa_Datos
+Imports Capa_Identidad
+Imports iTextSharp.text.pdf
 
 Public Class N_ImportarPDF
 #Region "Variables"
-    Private Formato As DataTable
+    Private Formatos As DataTable
     Private CamposNombre As DataTable
     Private CamposInicio As DataTable
     Private CamposFin As New DataTable
@@ -84,45 +85,101 @@ Public Class N_ImportarPDF
     ''' <summary>
     ''' Importa un archivo de reporte bancario
     ''' </summary>
-    ''' <param name="_Path">Path del archivo</param>
-    Private Function Importar(ByVal _Path As String) As Boolean
-        Dim Archivo As String
-        Dim Transaccion As New I_Transaccion
+    ''' <param name="_Ruta_archivo">Path del archivo</param>
+    Private Function Importar(ByVal _Ruta_archivo As String) As Boolean
+        Dim Archivo_pdf As String
+        Dim Lista_campos_encontrados As New I_Transaccion
         Dim db_Transaccion As New D_Transaccion
 
-        Dim i As Integer
+        Dim Formato_indice As Integer
+        Dim NumeroPagina As Integer
+        Dim TotalPaginas As Integer
+        Dim ImportacionExitosa As Boolean
 
         Try
-            Archivo = Leer(_Path)
-            If Archivo.Length > 100 Then
-                i = 0
-                For Each Linea As DataRow In Formato.Rows
-                    If InStr(Archivo, Linea.Item(1)) > 0 Then
-                        If InStr(Archivo, Linea.Item(2)) > 0 Then
-                            Transaccion = Buscar(i, Archivo, _Path)
+            Archivo_pdf = Leer(_Ruta_archivo)
+            If Archivo_pdf.Length > 100 Then
+                Formato_indice = 0
+                For Each Formato As DataRow In Formatos.Rows
+                    If InStr(Archivo_pdf, Formato.Item(1)) > 0 Then
+                        If InStr(Archivo_pdf, Formato.Item(2)) > 0 Then
 
-                            If Val(Linea.Item(4)) = 1 Then '------------------------------------------EMPLEADOS -------EMPLEADOS ------EMPLEADOS --
-                                Transaccion = ImportarEmpleados(Archivo, Transaccion)
+                            'Valida si es un formato multiple(contiene mas de una transaccion)
+                            If Val(Formato.Item(4)) = 2 Then
+                                'Obtiene el total de paginas para procesar cada pagina como una transaccion potencial.
+                                TotalPaginas = ObtenerNumeroPaginas(_Ruta_archivo)
+                                ImportacionExitosa = False
+
+                                For NumeroPagina = 1 To TotalPaginas
+                                    'Carga en Archivo_pdf solo el texto de la pagina actual.
+                                    Archivo_pdf = Leer(_Ruta_archivo, NumeroPagina)
+
+                                    If Archivo_pdf.Length < 1 Then
+                                        Continue For
+                                    End If
+
+                                    'Busca los campos del formato usando exclusivamente el contenido de la pagina actual.
+                                    Lista_campos_encontrados = Buscar(Formato_indice, Archivo_pdf, _Ruta_archivo)
+
+                                    If Lista_campos_encontrados Is Nothing Then
+                                        Continue For
+                                    End If
+
+                                    'Marca exito si al menos una pagina del PDF se inserta correctamente.
+                                    If InsertarTransaccion(Lista_campos_encontrados) Then
+                                        ImportacionExitosa = True
+                                    End If
+                                Next
+
+                                Return ImportacionExitosa
                             End If
 
-                            If db_Transaccion.Insertar(Transaccion) Then
-                                _ListaTransacciones.Add(Transaccion)
-                                Return True
-                            Else
-                                Return False
+                            'Se encarga de buscar todos los campos del formato especifico
+                            Lista_campos_encontrados = Buscar(Formato_indice, Archivo_pdf, _Ruta_archivo)
+
+                            'En caso de que el formato sea de empleados, se encarga de obtener la lista de empleados
+                            If Val(Formato.Item(4)) = 1 Then '------------------------------------------EMPLEADOS -------EMPLEADOS ------EMPLEADOS --
+                                Lista_campos_encontrados = ImportarEmpleados(Archivo_pdf, Lista_campos_encontrados)
                             End If
+
+                            'Inserta los datos encontrados en la base de datos, si es exitoso se agrega
+                            Return InsertarTransaccion(Lista_campos_encontrados)
+
                         End If
                     End If
-                    i += 1
+                    Formato_indice += 1
                 Next
             End If
-            VerificarError(_Path, Archivo)
+            VerificarError(_Ruta_archivo, Archivo_pdf)
             Return False
         Catch ex As Exception
             Return False
         End Try
 
     End Function
+
+    ''' <summary>
+    ''' Agrega la transaccion a la base de datos, si es exitosa se agrega a la lista de transacciones
+    ''' </summary>
+    ''' <param name="Lista_campos_encontrados"></param>
+    ''' <returns></returns>
+    Private Function InsertarTransaccion(ByVal Lista_campos_encontrados As I_Transaccion) As Boolean
+        Dim db_Transaccion As New D_Transaccion
+
+        Try
+            'Se encarga de insertar la transaccion a la base de datos, si es exitosa se agrega a la lista de transacciones
+            If db_Transaccion.Insertar(Lista_campos_encontrados) Then
+                _ListaTransacciones.Add(Lista_campos_encontrados)
+                Return True
+            Else
+                Return False
+            End If
+        Catch ex As Exception
+            Return False
+        End Try
+
+    End Function
+
 
     Private Sub VerificarError(ByVal Ubicacion As String, ByVal Cadena As String)
         Dim v1 As Boolean = False
@@ -191,6 +248,7 @@ Public Class N_ImportarPDF
 
         Return Transaccion
     End Function
+
     ''' <summary>
     ''' Devuelve lista de empleados
     ''' </summary>
@@ -228,6 +286,7 @@ Public Class N_ImportarPDF
 
         Return Empleados
     End Function
+
     ''' <summary>
     ''' Devuelve un empleado
     ''' </summary>
@@ -301,6 +360,7 @@ Public Class N_ImportarPDF
 
         Return Empleado
     End Function
+
 #End Region
     ''' <summary>
     ''' Lee archivo de reporte bancario
@@ -319,7 +379,46 @@ Public Class N_ImportarPDF
         Return Texto
     End Function
 
-    Public Function Buscar(ByVal Indice As Integer, ByVal Cadena As String, ByVal Ubicacion As String) As I_Transaccion
+    ''' <summary>
+    ''' Lee una pagina especifica del archivo de reporte bancario
+    ''' </summary>
+    ''' <param name="Ubicacion">Path del archivo</param>
+    ''' <param name="NumeroPagina">Numero de pagina a leer, base 1</param>
+    ''' <returns></returns>
+    Private Function Leer(ByVal Ubicacion As String, ByVal NumeroPagina As Integer) As String
+        Dim ArchivoPDF As New PdfReader(Ubicacion)
+        Dim Texto As String = ""
+
+        Try
+            If NumeroPagina < 1 OrElse NumeroPagina > ArchivoPDF.NumberOfPages Then
+                Return ""
+            End If
+
+            Dim its As New parser.SimpleTextExtractionStrategy
+            Texto = parser.PdfTextExtractor.GetTextFromPage(ArchivoPDF, NumeroPagina, its)
+        Finally
+            ArchivoPDF.Close()
+        End Try
+
+        Return Texto
+    End Function
+
+    ''' <summary>
+    ''' Obtiene el total de paginas del archivo PDF
+    ''' </summary>
+    ''' <param name="Ubicacion">Path del archivo</param>
+    ''' <returns></returns>
+    Private Function ObtenerNumeroPaginas(ByVal Ubicacion As String) As Integer
+        Dim ArchivoPDF As New PdfReader(Ubicacion)
+
+        Try
+            Return ArchivoPDF.NumberOfPages
+        Finally
+            ArchivoPDF.Close()
+        End Try
+    End Function
+
+    Public Function Buscar(ByVal Formato_indice As Integer, ByVal Archivo_pdf_texto_completo As String, ByVal Ubicacion As String) As I_Transaccion
         Dim CampoInicio As String
         Dim CampoFin As String
         Dim Inicio As Integer
@@ -328,17 +427,17 @@ Public Class N_ImportarPDF
         Dim Respuesta As New I_Transaccion
         Dim DB As New N_TR_Procesada
 
-        Respuesta.Idformato = Formato.Rows(Indice).Item(0).ToString
-        Respuesta.Banco_origen.Moneda = Formato.Rows(Indice).Item(3).ToString
-        Respuesta.Banco_destino.Moneda = Formato.Rows(Indice).Item(3).ToString
-        Respuesta.C15 = Formato.Rows(Indice).Item(3).ToString
+        Respuesta.Idformato = Formatos.Rows(Formato_indice).Item(0).ToString
+        Respuesta.Banco_origen.Moneda = Formatos.Rows(Formato_indice).Item(3).ToString
+        Respuesta.Banco_destino.Moneda = Formatos.Rows(Formato_indice).Item(3).ToString
+        Respuesta.C15 = Formatos.Rows(Formato_indice).Item(3).ToString
 
         Try
             For i = 1 To 17
                 Inicio = 0
                 Fin = 0
-                CampoInicio = CamposInicio.Rows(Indice).Item(i).ToString
-                CampoFin = CamposFin.Rows(Indice).Item(i).ToString
+                CampoInicio = CamposInicio.Rows(Formato_indice).Item(i).ToString
+                CampoFin = CamposFin.Rows(Formato_indice).Item(i).ToString
 
                 'Se reemplaza caracteres especiales para coincidencia con documento
                 CampoInicio = CampoInicio.Replace("\n", Chr(10))
@@ -355,22 +454,22 @@ Public Class N_ImportarPDF
                         CampoFin = Chr(10)
                     End If
 
-                    Inicio = InStr(Cadena, CampoInicio)
+                    Inicio = InStr(Archivo_pdf_texto_completo, CampoInicio)
                     Inicio = Inicio + CampoInicio.Length - 1
 
                     'Si se especifica fin de archivo
                     If CampoFin = "\f" Then
-                        Fin = Cadena.Length
+                        Fin = Archivo_pdf_texto_completo.Length
                     Else
-                        Fin = InStr(Inicio, Cadena, CampoFin)
+                        Fin = InStr(Inicio, Archivo_pdf_texto_completo, CampoFin)
                     End If
 
 
                     If (Fin - Inicio) < 1 Then
                         Dim y As Integer = 1
-                        While Fin - Inicio < 1 And y < Cadena.Length
+                        While Fin - Inicio < 1 And y < Archivo_pdf_texto_completo.Length
                             Try
-                                Fin = InStr(Inicio + y, Cadena, CampoFin)
+                                Fin = InStr(Inicio + y, Archivo_pdf_texto_completo, CampoFin)
                             Catch ex As Exception
                                 Exit While
                             End Try
@@ -381,13 +480,13 @@ Public Class N_ImportarPDF
 
                     Try
                         If CampoFin = "\f" Then
-                            Auxiliar = Cadena.Substring(Inicio, Fin - Inicio)
+                            Auxiliar = Archivo_pdf_texto_completo.Substring(Inicio, Fin - Inicio)
                         Else
-                            Auxiliar = Cadena.Substring(Inicio, Fin - (Inicio + 1))
+                            Auxiliar = Archivo_pdf_texto_completo.Substring(Inicio, Fin - (Inicio + 1))
                         End If
                     Catch ex As Exception
                         If Inicio > 1 Then
-                            Auxiliar = Cadena.Substring(Inicio)
+                            Auxiliar = Archivo_pdf_texto_completo.Substring(Inicio)
                         End If
                         Auxiliar = ""
                         Console.WriteLine(ex.Message + vbCrLf + vbCrLf + ex.StackTrace)
@@ -401,7 +500,7 @@ Public Class N_ImportarPDF
 
             'AQUI SE INSERTAN LOS COMPLEMENTOS DE LOS FORMATOS --------------------
 
-            Respuesta = Complementos(Cadena, Respuesta)
+            Respuesta = Complementos(Archivo_pdf_texto_completo, Respuesta)
 
             '-----FIN COMPLEMENTOS FORMATO **************************************
 
@@ -427,12 +526,12 @@ Public Class N_ImportarPDF
 
             ' Continua ejecución normal ---------------------------------------------------------
 
-            If Len(Formato.Rows(Indice).Item(5).ToString) > 0 Then
-                Respuesta.C1 = Formato.Rows(Indice).Item(5).ToString
+            If Len(Formatos.Rows(Formato_indice).Item(5).ToString) > 0 Then
+                Respuesta.C1 = Formatos.Rows(Formato_indice).Item(5).ToString
             End If
 
-            If Len(Formato.Rows(Indice).Item(6).ToString) > 0 Then
-                Respuesta.C5 = Formato.Rows(Indice).Item(6).ToString
+            If Len(Formatos.Rows(Formato_indice).Item(6).ToString) > 0 Then
+                Respuesta.C5 = Formatos.Rows(Formato_indice).Item(6).ToString
             End If
 
             If Respuesta.C8.Length < 2 Then
@@ -468,7 +567,7 @@ Public Class N_ImportarPDF
         Dim _CI As New D_CamposInicio
         Dim _CF As New D_CamposFin
 
-        Formato = _Formato.Lista
+        Formatos = _Formato.Lista
         CamposNombre = _CN.Lista
         CamposInicio = _CI.Lista
         CamposFin = _CF.Lista

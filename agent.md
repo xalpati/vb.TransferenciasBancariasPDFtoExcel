@@ -170,7 +170,18 @@ Siempre que se haga trabajo relevante, este archivo debe actualizarse con:
 
 ## Último Trabajo Realizado
 
-Fecha: `2026-03-18`
+Fecha: `2026-03-19`
+
+Contexto activo de trabajo:
+- Actualmente se está trabajando en la función `Importar` del archivo:
+  - `Codigo Fuente/Bancos_AdministradorPDF/Capa_Negocio/N_ImportarPDF.vb`
+- Esta función es el punto central de la importación de PDFs:
+  - lee el texto del archivo
+  - identifica el formato
+  - invoca la extracción de campos
+  - importa empleados cuando aplica
+  - inserta la transacción en base de datos
+  - registra errores si el formato no coincide o falla la importación
 
 Se realizó un análisis técnico general del proyecto y se concluyó:
 - La app importa formatos `.nfo` y PDFs bancarios para extraer campos por delimitadores.
