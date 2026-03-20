@@ -1,4 +1,4 @@
-# AGENT CONTEXT
+﻿# AGENT CONTEXT
 
 Este archivo sirve como memoria operativa del proyecto para sesiones futuras.
 Siempre que se haga trabajo relevante, este archivo debe actualizarse con:
