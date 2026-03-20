@@ -256,3 +256,9 @@ Posteriormente se extendió el código para PEIBO:
 - desacoplar la exportación de Excel Interop
 - agregar validación formal del archivo `.nfo`
 - alinear el script de BD con el modelo real usado por la aplicación
+## Nota de Sesion Adicional
+
+- Se agrego un indicador de progreso para la importacion de PDFs y carpetas.
+- `N_ImportarPDF.vb` ahora notifica progreso por evento con total, procesados, importados y archivo actual.
+- `GUI_ImportarPDF.vb` ejecuta la importacion en segundo plano con `Task.Run` para evitar que se congele la UI.
+- `GUI_Load_Importar.vb` actualiza la barra de progreso y los contadores desde el evento del importador.

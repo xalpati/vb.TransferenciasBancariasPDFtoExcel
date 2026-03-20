@@ -31,6 +31,8 @@ Partial Class GUI_Load_Importar
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.Label4 = New System.Windows.Forms.Label()
+        Me.txtArchivoActual = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'txtRestantes
@@ -78,7 +80,6 @@ Partial Class GUI_Load_Importar
         Me.txtProgreso.Step = 1
         Me.txtProgreso.Style = System.Windows.Forms.ProgressBarStyle.Continuous
         Me.txtProgreso.TabIndex = 11
-        Me.txtProgreso.Value = 15
         '
         'Label3
         '
@@ -107,11 +108,31 @@ Partial Class GUI_Load_Importar
         Me.Label1.Text = "Total archivos:"
         Me.Label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight
         '
+        'Label4
+        '
+        Me.Label4.Location = New System.Drawing.Point(11, 93)
+        Me.Label4.Name = "Label4"
+        Me.Label4.Size = New System.Drawing.Size(130, 22)
+        Me.Label4.TabIndex = 16
+        Me.Label4.Text = "Archivo actual:"
+        Me.Label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'txtArchivoActual
+        '
+        Me.txtArchivoActual.Location = New System.Drawing.Point(147, 93)
+        Me.txtArchivoActual.Name = "txtArchivoActual"
+        Me.txtArchivoActual.Size = New System.Drawing.Size(327, 22)
+        Me.txtArchivoActual.TabIndex = 17
+        Me.txtArchivoActual.Text = "."
+        Me.txtArchivoActual.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
         'GUI_Load_Importar
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(11.0!, 22.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(485, 198)
+        Me.Controls.Add(Me.txtArchivoActual)
+        Me.Controls.Add(Me.Label4)
         Me.Controls.Add(Me.txtRestantes)
         Me.Controls.Add(Me.txtImportados)
         Me.Controls.Add(Me.txtTotal)
@@ -140,4 +161,6 @@ Partial Class GUI_Load_Importar
     Friend WithEvents Label3 As Label
     Friend WithEvents Label2 As Label
     Friend WithEvents Label1 As Label
+    Friend WithEvents Label4 As Label
+    Friend WithEvents txtArchivoActual As Label
 End Class

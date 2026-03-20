@@ -13,6 +13,7 @@ Public Class N_ImportarPDF
     Private _ListaTransacciones As New List(Of I_Transaccion)
     Public Errores As Hashtable
     Public No_Errores As Integer = 0
+    Public Event ProgresoActualizado(ByVal sender As Object, ByVal e As ImportarPDFProgresoEventArgs)
 
 #End Region
 #Region "Constructor"
@@ -45,43 +46,72 @@ Public Class N_ImportarPDF
     ''' <param name="_Path">Archivo</param>
     ''' <returns>True - Si exitoso</returns>
     Public Function ImportarArchivo(ByVal _Path As String) As Boolean
-        If Importar("\\?\" & _Path) Then
-            Return True
-        Else
-            Return False
-        End If
+        Dim Archivos As New List(Of String) From {"\\?\" & _Path}
+        Return ImportarArchivos(Archivos)
     End Function
     ''' <summary>
     ''' Importa todos los archivos de una carpeta
     ''' </summary>
     ''' <param name="_Path">Carpeta</param>
     Public Sub ImportarCarpeta(ByVal _Path As String)
-        AnalizarCarpeta("\\?\" & _Path, "\\?\" & _Path)
-    End Sub
-
-    Private Sub AnalizarCarpeta(ByVal sDir As String, ByVal CarpetaRaiz As String)
-        Dim d As String
-        Dim f As String
-
-        Try
-            For Each f In Directory.GetFiles(sDir, "*.pdf")
-                Try
-                    Importar(f)
-                Catch ex As Exception
-                End Try
-            Next
-            Try
-                For Each d In Directory.GetDirectories(sDir)
-                    AnalizarCarpeta(d, CarpetaRaiz)
-                Next
-            Catch ex As Exception
-            End Try
-        Catch ex As Exception
-        End Try
+        Dim Archivos As List(Of String) = ObtenerArchivosPDF("\\?\" & _Path)
+        ImportarArchivos(Archivos)
     End Sub
 
 #End Region
 #Region "Privadas"
+    Private Function ImportarArchivos(ByVal Archivos As List(Of String)) As Boolean
+        Dim TotalArchivos As Integer
+        Dim ArchivosProcesados As Integer = 0
+        Dim ArchivosImportados As Integer = 0
+        Dim ImportacionExitosa As Boolean = False
+
+        Try
+            TotalArchivos = Archivos.Count
+            NotificarProgreso(TotalArchivos, ArchivosProcesados, ArchivosImportados, "")
+
+            For Each Archivo As String In Archivos
+                NotificarProgreso(TotalArchivos, ArchivosProcesados, ArchivosImportados, Path.GetFileName(Archivo))
+
+                Try
+                    If Importar(Archivo) Then
+                        ArchivosImportados += 1
+                        ImportacionExitosa = True
+                    End If
+                Catch ex As Exception
+                Finally
+                    ArchivosProcesados += 1
+                    NotificarProgreso(TotalArchivos, ArchivosProcesados, ArchivosImportados, Path.GetFileName(Archivo))
+                End Try
+            Next
+        Catch ex As Exception
+        End Try
+
+        Return ImportacionExitosa
+    End Function
+
+    Private Function ObtenerArchivosPDF(ByVal Ruta As String) As List(Of String)
+        Dim Archivos As New List(Of String)
+
+        Try
+            Archivos.AddRange(Directory.GetFiles(Ruta, "*.pdf", SearchOption.AllDirectories))
+            Archivos.AddRange(Directory.GetFiles(Ruta, "*.PDF", SearchOption.AllDirectories))
+        Catch ex As Exception
+        End Try
+
+        Return Archivos.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+    End Function
+
+    Private Sub NotificarProgreso(ByVal TotalArchivos As Integer,
+                                  ByVal ArchivosProcesados As Integer,
+                                  ByVal ArchivosImportados As Integer,
+                                  ByVal ArchivoActual As String)
+        RaiseEvent ProgresoActualizado(Me, New ImportarPDFProgresoEventArgs(TotalArchivos,
+                                                                            ArchivosProcesados,
+                                                                            ArchivosImportados,
+                                                                            ArchivoActual))
+    End Sub
+
     ''' <summary>
     ''' Importa un archivo de reporte bancario
     ''' </summary>
@@ -808,4 +838,23 @@ Public Class N_ImportarPDF
     End Function
 #End Region
 
+End Class
+
+Public Class ImportarPDFProgresoEventArgs
+    Inherits EventArgs
+
+    Public Sub New(ByVal TotalArchivos As Integer,
+                   ByVal ArchivosProcesados As Integer,
+                   ByVal ArchivosImportados As Integer,
+                   ByVal ArchivoActual As String)
+        Me.TotalArchivos = TotalArchivos
+        Me.ArchivosProcesados = ArchivosProcesados
+        Me.ArchivosImportados = ArchivosImportados
+        Me.ArchivoActual = ArchivoActual
+    End Sub
+
+    Public ReadOnly Property TotalArchivos As Integer
+    Public ReadOnly Property ArchivosProcesados As Integer
+    Public ReadOnly Property ArchivosImportados As Integer
+    Public ReadOnly Property ArchivoActual As String
 End Class
