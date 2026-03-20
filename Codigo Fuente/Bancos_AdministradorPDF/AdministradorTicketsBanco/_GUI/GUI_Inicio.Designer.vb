@@ -432,7 +432,7 @@ Partial Class GUI_Inicio
         Me.Tabla.AllowUserToOrderColumns = True
         DataGridViewCellStyle1.BackColor = System.Drawing.Color.AliceBlue
         Me.Tabla.AlternatingRowsDefaultCellStyle = DataGridViewCellStyle1
-        Me.Tabla.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells
+        Me.Tabla.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells
         Me.Tabla.BackgroundColor = System.Drawing.Color.White
         Me.Tabla.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.Tabla.Dock = System.Windows.Forms.DockStyle.Fill

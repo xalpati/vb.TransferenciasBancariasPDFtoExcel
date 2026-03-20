@@ -1,10 +1,13 @@
-﻿Imports Capa_Negocio
+Imports Capa_Negocio
+Imports System.Reflection
 
 Public Class GUI_Inicio
 #Region "VARIABLES ------------------------------------------------------------------------------"
     Private db_Empresa As DataTable
     Private db_BancoOrigen As DataTable
     Private db_BancoDestino As DataTable
+    Private ReadOnly TimerFiltros As New Timer()
+    Private SuspendirFiltros As Boolean = False
 
 #End Region
 #Region "FUNCIONES COMPONENTES ------------------------------------------------------------------"
@@ -25,6 +28,8 @@ Public Class GUI_Inicio
     End Sub
 
     Private Sub GUI_Inicio_Load(sender As Object, e As EventArgs) Handles Me.Load
+        PrepararTabla()
+        PrepararTimerFiltros()
         CargarDatos()
     End Sub
 
@@ -49,29 +54,49 @@ Public Class GUI_Inicio
     End Sub
 
     Private Sub txtFechas_CheckedChanged(sender As Object, e As EventArgs) Handles txtFechas.CheckedChanged
+        If SuspendirFiltros Then
+            Return
+        End If
+
         If txtFechas.Checked Then
             P_Fechas.Enabled = True
-            FiltrarInfo()
         Else
             P_Fechas.Enabled = False
-            FiltrarInfo()
         End If
+
+        ProgramarFiltro()
     End Sub
 
     Private Sub txtBancoOrigen_SelectedIndexChanged(sender As Object, e As EventArgs) Handles txtBancoOrigen.SelectedIndexChanged
-        FiltrarInfo()
+        If SuspendirFiltros Then
+            Return
+        End If
+
+        ProgramarFiltro()
     End Sub
 
     Private Sub txtBancoDestino_SelectedIndexChanged(sender As Object, e As EventArgs) Handles txtBancoDestino.SelectedIndexChanged
-        FiltrarInfo()
+        If SuspendirFiltros Then
+            Return
+        End If
+
+        ProgramarFiltro()
     End Sub
 
     Private Sub txtFechaInicio_ValueChanged(sender As Object, e As EventArgs) Handles txtFechaInicio.ValueChanged
-        FiltrarInfo()
+        If SuspendirFiltros Then
+            Return
+        End If
+
+        ProgramarFiltro()
     End Sub
 
     Private Sub txtFechaFin_ValueChanged(sender As Object, e As EventArgs) Handles txtFechaFin.ValueChanged
-        FiltrarInfo()
+        If SuspendirFiltros Then
+            Return
+        End If
+
+        ProgramarFiltro()
     End Sub
 
 #End Region
@@ -82,6 +107,8 @@ Public Class GUI_Inicio
         Dim dbEmpresa As New N_EmpresaExterna
 
         Try
+            SuspendirFiltros = True
+            TimerFiltros.Stop()
             db_Empresa = dbEmpresa.Lista
             db_BancoOrigen = dbBanco.ListaBancoOrigen
             db_BancoDestino = dbBanco.ListaBancoDestino
@@ -114,9 +141,11 @@ Public Class GUI_Inicio
 
             db_Transaccion = db_Transacciones.Lista
 
-            Tabla.DataSource = db_Transaccion
+            AsignarTabla(db_Transaccion)
         Catch ex As Exception
             msg("Error", 2)
+        Finally
+            SuspendirFiltros = False
         End Try
     End Sub
     Private Sub Campos(ByVal Valor)
@@ -157,20 +186,32 @@ Public Class GUI_Inicio
 #Region "FILTROS --------------------------------------------------------------------------------"
 
     Private Sub txtClaveRastreo_TextChanged(sender As Object, e As EventArgs) Handles txtClaveRastreo.TextChanged
+        If SuspendirFiltros Then
+            Return
+        End If
+
+        ProgramarFiltro()
+    End Sub
+
+    Private Sub AplicarFiltroClaveRastreo()
         Dim DB As New N_Filtros
 
         If txtClaveRastreo.Text.Length > 0 Then
             Campos(False)
             db_Transaccion = DB.Consultar(txtClaveRastreo.Text)
-            Tabla.DataSource = db_Transaccion
+            AsignarTabla(db_Transaccion)
         Else
             db_Transaccion = DB.Consultar
-            Tabla.DataSource = db_Transaccion
+            AsignarTabla(db_Transaccion)
             Campos(True)
         End If
     End Sub
 
     Private Sub txtEmpresa_SelectedIndexChanged(sender As Object, e As EventArgs) Handles txtEmpresa.SelectedIndexChanged
+        If SuspendirFiltros Then
+            Return
+        End If
+
         Dim DB As New N_Filtros
         Dim FI As String
         Dim FF As String
@@ -202,13 +243,13 @@ Public Class GUI_Inicio
             End If
 
             db_Transaccion = DB.Consultar(Empresa, FI, FF)
-            Tabla.DataSource = db_Transaccion
+            AsignarTabla(db_Transaccion)
         Else
             Campos(True)
             txtClaveRastreo.Enabled = True
 
             db_Transaccion = DB.Consultar
-            Tabla.DataSource = db_Transaccion
+            AsignarTabla(db_Transaccion)
         End If
     End Sub
 
@@ -250,7 +291,7 @@ Public Class GUI_Inicio
             txtEmpresa.Enabled = False
 
             db_Transaccion = DB.Consultar(BO, BD, FI, FF)
-            Tabla.DataSource = db_Transaccion
+            AsignarTabla(db_Transaccion)
         ElseIf txtBancoDestino.SelectedIndex > 0 Then
             BD = db_BancoDestino.Rows(txtBancoDestino.SelectedIndex - 1).Item(0).ToString
 
@@ -281,7 +322,7 @@ Public Class GUI_Inicio
             txtEmpresa.Enabled = False
 
             db_Transaccion = DB.Consultar(BO, BD, FI, FF)
-            Tabla.DataSource = db_Transaccion
+            AsignarTabla(db_Transaccion)
         Else
             Campos(True)
 
@@ -299,10 +340,10 @@ Public Class GUI_Inicio
                 End If
 
                 db_Transaccion = DB.Consultar("", "", FI, FF)
-                Tabla.DataSource = db_Transaccion
+                AsignarTabla(db_Transaccion)
             Else
                 db_Transaccion = DB.Consultar()
-                Tabla.DataSource = db_Transaccion
+                AsignarTabla(db_Transaccion)
             End If
 
             txtClaveRastreo.Enabled = True
@@ -310,6 +351,7 @@ Public Class GUI_Inicio
     End Sub
 
     Private Sub btnAplicarFiltro_Click(sender As Object, e As EventArgs) Handles btnAplicarFiltro.Click
+        TimerFiltros.Stop()
         FiltrarInfo()
     End Sub
 
@@ -320,6 +362,49 @@ Public Class GUI_Inicio
 
     Private Sub Tabla_DataSourceChanged(sender As Object, e As EventArgs) Handles Tabla.DataSourceChanged
         txtTotal.Text = Tabla.Rows.Count - 1
+    End Sub
+
+    Private Sub PrepararTabla()
+        Tabla.RowHeadersVisible = False
+        Tabla.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None
+
+        Try
+            GetType(DataGridView).InvokeMember("DoubleBuffered",
+                                               BindingFlags.NonPublic Or BindingFlags.Instance Or BindingFlags.SetProperty,
+                                               Nothing,
+                                               Tabla,
+                                               New Object() {True})
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Private Sub PrepararTimerFiltros()
+        TimerFiltros.Interval = 350
+        AddHandler TimerFiltros.Tick, AddressOf TimerFiltros_Tick
+    End Sub
+
+    Private Sub ProgramarFiltro()
+        TimerFiltros.Stop()
+        TimerFiltros.Start()
+    End Sub
+
+    Private Sub TimerFiltros_Tick(sender As Object, e As EventArgs)
+        TimerFiltros.Stop()
+
+        If txtClaveRastreo.TextLength > 0 Then
+            AplicarFiltroClaveRastreo()
+        ElseIf txtEmpresa.SelectedIndex > 0 Then
+            txtEmpresa_SelectedIndexChanged(txtEmpresa, EventArgs.Empty)
+        Else
+            FiltrarInfo()
+        End If
+    End Sub
+
+    Private Sub AsignarTabla(ByVal tablaDatos As DataTable)
+        Tabla.SuspendLayout()
+        Tabla.DataSource = Nothing
+        Tabla.DataSource = tablaDatos
+        Tabla.ResumeLayout()
     End Sub
 
     Private Sub TransaccionesToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TransaccionesToolStripMenuItem.Click
