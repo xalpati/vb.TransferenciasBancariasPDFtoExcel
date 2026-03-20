@@ -33,6 +33,9 @@ Partial Class GUI_Load_Importar
         Me.Label1 = New System.Windows.Forms.Label()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.txtArchivoActual = New System.Windows.Forms.Label()
+        Me.Label5 = New System.Windows.Forms.Label()
+        Me.txtPaginaActual = New System.Windows.Forms.Label()
+        Me.txtProgresoPaginas = New System.Windows.Forms.ProgressBar()
         Me.SuspendLayout()
         '
         'txtRestantes
@@ -65,7 +68,7 @@ Partial Class GUI_Load_Importar
         'btnCerrar
         '
         Me.btnCerrar.Enabled = False
-        Me.btnCerrar.Location = New System.Drawing.Point(373, 150)
+        Me.btnCerrar.Location = New System.Drawing.Point(373, 193)
         Me.btnCerrar.Name = "btnCerrar"
         Me.btnCerrar.Size = New System.Drawing.Size(101, 36)
         Me.btnCerrar.TabIndex = 12
@@ -126,11 +129,41 @@ Partial Class GUI_Load_Importar
         Me.txtArchivoActual.Text = "."
         Me.txtArchivoActual.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
+        'Label5
+        '
+        Me.Label5.Location = New System.Drawing.Point(11, 151)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(130, 22)
+        Me.Label5.TabIndex = 18
+        Me.Label5.Text = "Paginas:"
+        Me.Label5.TextAlign = System.Drawing.ContentAlignment.MiddleRight
+        '
+        'txtPaginaActual
+        '
+        Me.txtPaginaActual.Location = New System.Drawing.Point(147, 151)
+        Me.txtPaginaActual.Name = "txtPaginaActual"
+        Me.txtPaginaActual.Size = New System.Drawing.Size(327, 22)
+        Me.txtPaginaActual.TabIndex = 19
+        Me.txtPaginaActual.Text = "."
+        Me.txtPaginaActual.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'txtProgresoPaginas
+        '
+        Me.txtProgresoPaginas.Location = New System.Drawing.Point(16, 176)
+        Me.txtProgresoPaginas.Name = "txtProgresoPaginas"
+        Me.txtProgresoPaginas.Size = New System.Drawing.Size(351, 23)
+        Me.txtProgresoPaginas.Step = 1
+        Me.txtProgresoPaginas.Style = System.Windows.Forms.ProgressBarStyle.Continuous
+        Me.txtProgresoPaginas.TabIndex = 20
+        '
         'GUI_Load_Importar
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(11.0!, 22.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(485, 198)
+        Me.ClientSize = New System.Drawing.Size(485, 240)
+        Me.Controls.Add(Me.txtProgresoPaginas)
+        Me.Controls.Add(Me.txtPaginaActual)
+        Me.Controls.Add(Me.Label5)
         Me.Controls.Add(Me.txtArchivoActual)
         Me.Controls.Add(Me.Label4)
         Me.Controls.Add(Me.txtRestantes)
@@ -163,4 +196,7 @@ Partial Class GUI_Load_Importar
     Friend WithEvents Label1 As Label
     Friend WithEvents Label4 As Label
     Friend WithEvents txtArchivoActual As Label
+    Friend WithEvents Label5 As Label
+    Friend WithEvents txtPaginaActual As Label
+    Friend WithEvents txtProgresoPaginas As ProgressBar
 End Class

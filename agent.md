@@ -262,3 +262,8 @@ Posteriormente se extendió el código para PEIBO:
 - `N_ImportarPDF.vb` ahora notifica progreso por evento con total, procesados, importados y archivo actual.
 - `GUI_ImportarPDF.vb` ejecuta la importacion en segundo plano con `Task.Run` para evitar que se congele la UI.
 - `GUI_Load_Importar.vb` actualiza la barra de progreso y los contadores desde el evento del importador.
+- Se extendio el progreso de importacion para incluir paginas del archivo actual.
+- ImportarPDFProgresoEventArgs ahora incluye PaginasProcesadas y TotalPaginas.
+- GUI_Load_Importar muestra una segunda barra de progreso para paginas del PDF en curso.
+- La barra de progreso por paginas se restringio al formato F020.
+- Para formatos distintos, la UI oculta completamente el progreso por paginas.

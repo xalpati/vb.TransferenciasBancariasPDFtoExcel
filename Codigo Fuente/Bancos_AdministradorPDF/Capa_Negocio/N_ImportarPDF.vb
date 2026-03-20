@@ -11,6 +11,10 @@ Public Class N_ImportarPDF
     Private CamposInicio As DataTable
     Private CamposFin As New DataTable
     Private _ListaTransacciones As New List(Of I_Transaccion)
+    Private _TotalArchivos As Integer = 0
+    Private _ArchivosProcesados As Integer = 0
+    Private _ArchivosImportados As Integer = 0
+    Private _ArchivoActual As String = ""
     Public Errores As Hashtable
     Public No_Errores As Integer = 0
     Public Event ProgresoActualizado(ByVal sender As Object, ByVal e As ImportarPDFProgresoEventArgs)
@@ -68,20 +72,30 @@ Public Class N_ImportarPDF
 
         Try
             TotalArchivos = Archivos.Count
-            NotificarProgreso(TotalArchivos, ArchivosProcesados, ArchivosImportados, "")
+            _TotalArchivos = TotalArchivos
+            _ArchivosProcesados = ArchivosProcesados
+            _ArchivosImportados = ArchivosImportados
+            _ArchivoActual = ""
+            NotificarProgreso(0, 0)
 
             For Each Archivo As String In Archivos
-                NotificarProgreso(TotalArchivos, ArchivosProcesados, ArchivosImportados, Path.GetFileName(Archivo))
+                _ArchivosProcesados = ArchivosProcesados
+                _ArchivosImportados = ArchivosImportados
+                _ArchivoActual = Path.GetFileName(Archivo)
+                NotificarProgreso(0, 0)
 
                 Try
                     If Importar(Archivo) Then
                         ArchivosImportados += 1
+                        _ArchivosImportados = ArchivosImportados
                         ImportacionExitosa = True
                     End If
                 Catch ex As Exception
                 Finally
                     ArchivosProcesados += 1
-                    NotificarProgreso(TotalArchivos, ArchivosProcesados, ArchivosImportados, Path.GetFileName(Archivo))
+                    _ArchivosProcesados = ArchivosProcesados
+                    _ArchivosImportados = ArchivosImportados
+                    NotificarProgreso(0, 0)
                 End Try
             Next
         Catch ex As Exception
@@ -102,14 +116,14 @@ Public Class N_ImportarPDF
         Return Archivos.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
     End Function
 
-    Private Sub NotificarProgreso(ByVal TotalArchivos As Integer,
-                                  ByVal ArchivosProcesados As Integer,
-                                  ByVal ArchivosImportados As Integer,
-                                  ByVal ArchivoActual As String)
-        RaiseEvent ProgresoActualizado(Me, New ImportarPDFProgresoEventArgs(TotalArchivos,
-                                                                            ArchivosProcesados,
-                                                                            ArchivosImportados,
-                                                                            ArchivoActual))
+    Private Sub NotificarProgreso(ByVal PaginasProcesadas As Integer,
+                                  ByVal TotalPaginas As Integer)
+        RaiseEvent ProgresoActualizado(Me, New ImportarPDFProgresoEventArgs(_TotalArchivos,
+                                                                            _ArchivosProcesados,
+                                                                            _ArchivosImportados,
+                                                                            _ArchivoActual,
+                                                                            PaginasProcesadas,
+                                                                            TotalPaginas))
     End Sub
 
     ''' <summary>
@@ -125,6 +139,7 @@ Public Class N_ImportarPDF
         Dim NumeroPagina As Integer
         Dim TotalPaginas As Integer
         Dim ImportacionExitosa As Boolean
+        Dim IdFormato As String
 
         Try
             Archivo_pdf = Leer(_Ruta_archivo)
@@ -133,16 +148,19 @@ Public Class N_ImportarPDF
                 For Each Formato As DataRow In Formatos.Rows
                     If InStr(Archivo_pdf, Formato.Item(1)) > 0 Then
                         If InStr(Archivo_pdf, Formato.Item(2)) > 0 Then
+                            IdFormato = Formato.Item(0).ToString().Trim().ToUpper()
 
                             'Valida si es un formato multiple(contiene mas de una transaccion)
-                            If Val(Formato.Item(4)) = 2 Then
+                            If IdFormato = "F020" AndAlso Val(Formato.Item(4)) = 2 Then
                                 'Obtiene el total de paginas para procesar cada pagina como una transaccion potencial.
                                 TotalPaginas = ObtenerNumeroPaginas(_Ruta_archivo)
+                                NotificarProgreso(0, TotalPaginas)
                                 ImportacionExitosa = False
 
                                 For NumeroPagina = 1 To TotalPaginas
                                     'Carga en Archivo_pdf solo el texto de la pagina actual.
                                     Archivo_pdf = Leer(_Ruta_archivo, NumeroPagina)
+                                    NotificarProgreso(NumeroPagina, TotalPaginas)
 
                                     If Archivo_pdf.Length < 1 Then
                                         Continue For
@@ -161,6 +179,7 @@ Public Class N_ImportarPDF
                                     End If
                                 Next
 
+                                NotificarProgreso(TotalPaginas, TotalPaginas)
                                 Return ImportacionExitosa
                             End If
 
@@ -173,13 +192,16 @@ Public Class N_ImportarPDF
                             End If
 
                             'Inserta los datos encontrados en la base de datos, si es exitoso se agrega
-                            Return InsertarTransaccion(Lista_campos_encontrados)
+                            ImportacionExitosa = InsertarTransaccion(Lista_campos_encontrados)
+                            NotificarProgreso(0, 0)
+                            Return ImportacionExitosa
 
                         End If
                     End If
                     Formato_indice += 1
                 Next
             End If
+            NotificarProgreso(0, 0)
             VerificarError(_Ruta_archivo, Archivo_pdf)
             Return False
         Catch ex As Exception
@@ -846,15 +868,21 @@ Public Class ImportarPDFProgresoEventArgs
     Public Sub New(ByVal TotalArchivos As Integer,
                    ByVal ArchivosProcesados As Integer,
                    ByVal ArchivosImportados As Integer,
-                   ByVal ArchivoActual As String)
+                   ByVal ArchivoActual As String,
+                   ByVal PaginasProcesadas As Integer,
+                   ByVal TotalPaginas As Integer)
         Me.TotalArchivos = TotalArchivos
         Me.ArchivosProcesados = ArchivosProcesados
         Me.ArchivosImportados = ArchivosImportados
         Me.ArchivoActual = ArchivoActual
+        Me.PaginasProcesadas = PaginasProcesadas
+        Me.TotalPaginas = TotalPaginas
     End Sub
 
     Public ReadOnly Property TotalArchivos As Integer
     Public ReadOnly Property ArchivosProcesados As Integer
     Public ReadOnly Property ArchivosImportados As Integer
     Public ReadOnly Property ArchivoActual As String
+    Public ReadOnly Property PaginasProcesadas As Integer
+    Public ReadOnly Property TotalPaginas As Integer
 End Class

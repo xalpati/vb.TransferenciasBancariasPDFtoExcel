@@ -16,9 +16,16 @@ Public Class GUI_Load_Importar
         txtImportados.Text = "0"
         txtRestantes.Text = TotalArchivos.ToString()
         txtArchivoActual.Text = "Preparando importacion..."
+        txtPaginaActual.Text = "Preparando paginas..."
         txtProgreso.Minimum = 0
         txtProgreso.Maximum = Total
         txtProgreso.Value = 0
+        txtProgresoPaginas.Minimum = 0
+        txtProgresoPaginas.Maximum = 1
+        txtProgresoPaginas.Value = 0
+        Label5.Visible = False
+        txtPaginaActual.Visible = False
+        txtProgresoPaginas.Visible = False
         btnCerrar.Enabled = False
         _ImportacionFinalizada = False
     End Sub
@@ -48,6 +55,26 @@ Public Class GUI_Load_Importar
         End If
 
         txtProgreso.Value = Math.Min(e.ArchivosProcesados, txtProgreso.Maximum)
+
+        If e.TotalPaginas > 0 Then
+            Label5.Visible = True
+            txtPaginaActual.Visible = True
+            txtProgresoPaginas.Visible = True
+            txtPaginaActual.Text = e.PaginasProcesadas.ToString() & " / " & e.TotalPaginas.ToString()
+
+            If txtProgresoPaginas.Maximum <> e.TotalPaginas Then
+                txtProgresoPaginas.Maximum = e.TotalPaginas
+            End If
+
+            txtProgresoPaginas.Value = Math.Min(e.PaginasProcesadas, txtProgresoPaginas.Maximum)
+        Else
+            Label5.Visible = False
+            txtPaginaActual.Visible = False
+            txtProgresoPaginas.Visible = False
+            txtPaginaActual.Text = "Esperando paginas..."
+            txtProgresoPaginas.Maximum = 1
+            txtProgresoPaginas.Value = 0
+        End If
     End Sub
 
     Public Sub Finalizar()
@@ -57,7 +84,9 @@ Public Class GUI_Load_Importar
         End If
 
         txtArchivoActual.Text = "Importacion finalizada."
+        txtPaginaActual.Text = "Completado."
         txtProgreso.Value = txtProgreso.Maximum
+        txtProgresoPaginas.Value = txtProgresoPaginas.Maximum
         btnCerrar.Enabled = True
         _ImportacionFinalizada = True
         Activate()
