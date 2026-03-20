@@ -586,6 +586,8 @@ Public Class N_ImportarPDF
             Select Case obj.Idformato
                 Case "F15"
                     Return c_f15(cadena, obj)
+                Case "F020"
+                    Return c_f20(cadena, obj)
                 Case Else
                     Return obj
             End Select
@@ -655,6 +657,132 @@ Public Class N_ImportarPDF
         End Try
 
         Return obj
+    End Function
+
+    ''' <summary>
+    ''' Complemento del formato 20 - PEIBO
+    ''' Interpreta la "Cadena Original Información del Pago" para recuperar
+    ''' campos que no se extraen bien con delimitadores simples.
+    ''' </summary>
+    ''' <param name="cadena"></param>
+    ''' <param name="obj"></param>
+    ''' <returns></returns>
+    Private Function c_f20(ByVal cadena As String, ByVal obj As I_Transaccion) As I_Transaccion
+        Dim CadenaOriginal As String
+        Dim Partes As String()
+
+        Try
+            CadenaOriginal = ExtraerCadenaOriginalPago(cadena)
+
+            If CadenaOriginal.Length < 1 Then
+                Return obj
+            End If
+
+            Partes = CadenaOriginal.Split("|"c)
+
+            'Indices relevantes del ejemplo PEIBO:
+            ' 7  = Banco origen
+            ' 8  = Nombre ordenante
+            ' 10 = Cuenta ordenante
+            ' 11 = RFC origen
+            ' 12 = Banco destino
+            ' 13 = Beneficiario en institución financiera
+            ' 15 = Cuenta destino
+            ' 16 = RFC destino
+            ' 17 = Concepto de pago
+            ' 19 = Importe
+            If GetParteCadenaOriginal(Partes, 7).Length > 0 Then obj.C1 = GetParteCadenaOriginal(Partes, 7)
+            If GetParteCadenaOriginal(Partes, 8).Length > 0 Then obj.C2 = GetParteCadenaOriginal(Partes, 8)
+            If GetParteCadenaOriginal(Partes, 10).Length > 0 Then obj.C4 = GetParteCadenaOriginal(Partes, 10)
+            If GetParteCadenaOriginal(Partes, 11).Length > 0 Then obj.C3 = GetParteCadenaOriginal(Partes, 11)
+            If GetParteCadenaOriginal(Partes, 12).Length > 0 Then obj.C5 = GetParteCadenaOriginal(Partes, 12)
+            If GetParteCadenaOriginal(Partes, 13).Length > 0 Then
+                obj.C6 = GetParteCadenaOriginal(Partes, 13)
+                obj.C11 = GetParteCadenaOriginal(Partes, 13)
+            End If
+            If GetParteCadenaOriginal(Partes, 15).Length > 0 Then obj.C8 = GetParteCadenaOriginal(Partes, 15)
+            If GetParteCadenaOriginal(Partes, 16).Length > 0 Then obj.C7 = GetParteCadenaOriginal(Partes, 16)
+            If GetParteCadenaOriginal(Partes, 17).Length > 0 Then obj.C10 = GetParteCadenaOriginal(Partes, 17)
+            If GetParteCadenaOriginal(Partes, 19).Length > 0 Then obj.C14 = Convert.ToDecimal(GetParteCadenaOriginal(Partes, 19))
+
+            If obj.C16.Length < 1 Then
+                obj.C16 = FormatearFechaCadenaOriginal(GetParteCadenaOriginal(Partes, 4))
+            End If
+
+        Catch ex As Exception
+        End Try
+
+        Return obj
+    End Function
+
+    Private Function ExtraerCadenaOriginalPago(ByVal cadena As String) As String
+        Dim Inicio As Integer
+        Dim Fin As Integer
+        Dim Resultado As String
+        Dim MarcaInicio As String = "Cadena Original Información del Pago:"
+        Dim MarcaFin As String = "Sello Digital (firma provista por el banco receptor del pago):"
+
+        Try
+            Inicio = cadena.IndexOf(MarcaInicio)
+
+            If Inicio < 0 Then
+                MarcaInicio = "Cadena Original Informacion del Pago:"
+                Inicio = cadena.IndexOf(MarcaInicio)
+            End If
+
+            If Inicio < 0 Then
+                Return ""
+            End If
+
+            Inicio += MarcaInicio.Length
+            Fin = cadena.IndexOf(MarcaFin, Inicio)
+
+            If Fin < 0 Then
+                Fin = cadena.Length
+            End If
+
+            Resultado = cadena.Substring(Inicio, Fin - Inicio)
+            Resultado = Resultado.Replace(vbCrLf, " ")
+            Resultado = Resultado.Replace(vbCr, " ")
+            Resultado = Resultado.Replace(Chr(10), " ")
+
+            While Resultado.Contains("  ")
+                Resultado = Resultado.Replace("  ", " ")
+            End While
+
+            Resultado = Resultado.Trim()
+
+            Return Resultado
+        Catch ex As Exception
+        End Try
+
+        Return ""
+    End Function
+
+    Private Function GetParteCadenaOriginal(ByVal Partes As String(), ByVal Indice As Integer) As String
+        Try
+            If Indice < 0 OrElse Indice > Partes.Length - 1 Then
+                Return ""
+            End If
+
+            Return Partes(Indice).Trim()
+        Catch ex As Exception
+        End Try
+
+        Return ""
+    End Function
+
+    Private Function FormatearFechaCadenaOriginal(ByVal Fecha As String) As String
+        Try
+            If Fecha.Length <> 8 Then
+                Return ""
+            End If
+
+            Return Fecha.Substring(0, 2) & "/" & Fecha.Substring(2, 2) & "/" & Fecha.Substring(4, 4)
+        Catch ex As Exception
+        End Try
+
+        Return ""
     End Function
 
     Private Function getIndiceInverso(ByVal _caracter As String, cadena As String) As Integer

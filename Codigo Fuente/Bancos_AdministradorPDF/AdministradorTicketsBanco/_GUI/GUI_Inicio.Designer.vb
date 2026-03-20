@@ -121,19 +121,19 @@ Partial Class GUI_Inicio
         'AgregarToolStripMenuItem
         '
         Me.AgregarToolStripMenuItem.Name = "AgregarToolStripMenuItem"
-        Me.AgregarToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.AgregarToolStripMenuItem.Size = New System.Drawing.Size(117, 22)
         Me.AgregarToolStripMenuItem.Text = "Agregar"
         '
         'VincularToolStripMenuItem
         '
         Me.VincularToolStripMenuItem.Name = "VincularToolStripMenuItem"
-        Me.VincularToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.VincularToolStripMenuItem.Size = New System.Drawing.Size(117, 22)
         Me.VincularToolStripMenuItem.Text = "Vincular"
         '
         'EliminarToolStripMenuItem
         '
         Me.EliminarToolStripMenuItem.Name = "EliminarToolStripMenuItem"
-        Me.EliminarToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.EliminarToolStripMenuItem.Size = New System.Drawing.Size(117, 22)
         Me.EliminarToolStripMenuItem.Text = "Eliminar"
         '
         'ImportarToolStripMenuItem
@@ -152,13 +152,13 @@ Partial Class GUI_Inicio
         'OrigenToolStripMenuItem
         '
         Me.OrigenToolStripMenuItem.Name = "OrigenToolStripMenuItem"
-        Me.OrigenToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.OrigenToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.OrigenToolStripMenuItem.Text = "Ver Bancos Origen"
         '
         'DestinoToolStripMenuItem
         '
         Me.DestinoToolStripMenuItem.Name = "DestinoToolStripMenuItem"
-        Me.DestinoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.DestinoToolStripMenuItem.Size = New System.Drawing.Size(174, 22)
         Me.DestinoToolStripMenuItem.Text = "Ver Bancos Destino"
         '
         'ImportarNuevoFormatoToolStripMenuItem
@@ -191,31 +191,31 @@ Partial Class GUI_Inicio
         'TransaccionesToolStripMenuItem
         '
         Me.TransaccionesToolStripMenuItem.Name = "TransaccionesToolStripMenuItem"
-        Me.TransaccionesToolStripMenuItem.Size = New System.Drawing.Size(147, 22)
+        Me.TransaccionesToolStripMenuItem.Size = New System.Drawing.Size(148, 22)
         Me.TransaccionesToolStripMenuItem.Text = "Transacciones"
         '
         'EmpresasToolStripMenuItem1
         '
         Me.EmpresasToolStripMenuItem1.Name = "EmpresasToolStripMenuItem1"
-        Me.EmpresasToolStripMenuItem1.Size = New System.Drawing.Size(147, 22)
+        Me.EmpresasToolStripMenuItem1.Size = New System.Drawing.Size(148, 22)
         Me.EmpresasToolStripMenuItem1.Text = "Empresas"
         '
         'BancosToolStripMenuItem1
         '
         Me.BancosToolStripMenuItem1.Name = "BancosToolStripMenuItem1"
-        Me.BancosToolStripMenuItem1.Size = New System.Drawing.Size(147, 22)
+        Me.BancosToolStripMenuItem1.Size = New System.Drawing.Size(148, 22)
         Me.BancosToolStripMenuItem1.Text = "Bancos"
         '
         'FormatosToolStripMenuItem
         '
         Me.FormatosToolStripMenuItem.Name = "FormatosToolStripMenuItem"
-        Me.FormatosToolStripMenuItem.Size = New System.Drawing.Size(147, 22)
+        Me.FormatosToolStripMenuItem.Size = New System.Drawing.Size(148, 22)
         Me.FormatosToolStripMenuItem.Text = "Formatos"
         '
         'TodoToolStripMenuItem
         '
         Me.TodoToolStripMenuItem.Name = "TodoToolStripMenuItem"
-        Me.TodoToolStripMenuItem.Size = New System.Drawing.Size(147, 22)
+        Me.TodoToolStripMenuItem.Size = New System.Drawing.Size(148, 22)
         Me.TodoToolStripMenuItem.Text = "Todo"
         '
         'P_Left
@@ -603,7 +603,7 @@ Partial Class GUI_Inicio
         Me.MinimumSize = New System.Drawing.Size(889, 658)
         Me.Name = "GUI_Inicio"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
-        Me.Text = "Administrador de reportes bancarios"
+        Me.Text = "Administrador de reportes bancarios V2.0"
         Me.WindowState = System.Windows.Forms.FormWindowState.Maximized
         Me.MenuStrip1.ResumeLayout(False)
         Me.MenuStrip1.PerformLayout()

@@ -227,6 +227,28 @@ También se agregó un nuevo formato `.nfo` para PEIBO:
   - número de cuenta destino
   - folio de internet
 
+Posteriormente se extendió el código para PEIBO:
+- archivo:
+  - `Codigo Fuente/Bancos_AdministradorPDF/Capa_Negocio/N_ImportarPDF.vb`
+- formato afectado:
+  - `F020`
+- estrategia:
+  - además de los delimitadores del `.nfo`, existe un complemento específico `c_f20`
+  - dicho complemento interpreta la sección `Cadena Original Información del Pago:` hasta `Sello Digital`
+  - la cadena original se normaliza quitando saltos de línea y luego se divide por `|`
+- datos que se intentan recuperar desde esa estructura:
+  - banco origen
+  - nombre del ordenante
+  - cuenta ordenante
+  - RFC origen
+  - banco destino
+  - beneficiario en institución financiera
+  - cuenta destino
+  - RFC destino
+  - concepto de pago
+  - importe
+  - fecha
+
 ## Próximos Puntos Útiles a Revisar
 
 - endurecer el parser de extracción
